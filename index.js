@@ -204,7 +204,7 @@
 
     window.onload = function () {
 
-        var game = new GameBoard(100, 200);
+        var game = new GameBoard(100, 100);
 
         game.init();
 
