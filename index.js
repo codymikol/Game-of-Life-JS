@@ -4,10 +4,19 @@
 
     function GameBoard(height, width) {
 
+        this.scale = 5
+
         this.height = height;
         this.width = width;
 
         this.container = document.getElementById('game-of-life');
+        this.canvas = document.getElementById('gol')
+        this.canvas.height = height * this.scale
+        this.canvas.width = width * this.scale
+        this.ctx = this.canvas.getContext('2d')
+
+        this.canvas.style.height = this.height * this.scale + 'px'
+        this.canvas.style.width = this.width * this.scale + 'px'
 
         this.cellMatrix = [];
         this.flatCellMap = [];
@@ -66,29 +75,10 @@
                 return row;
             });
 
-            //Add dom elements and add references to Cells
-            self.cellMatrix.forEach(function (row) {
-
-                var rowDiv = document.createElement('div');
-
-                rowDiv.style.display = 'flex';
-                rowDiv.style.flexDirection = 'row';
-
-                self.container.appendChild(rowDiv);
-
-                row.forEach(function (cell) {
-                    var domCell = document.createElement('div');
-                    rowDiv.appendChild(domCell);
-                    cell.init(domCell);
-                });
-
-            });
-
             //Seed some randomized living cells for the simulation
             self.flatCellMap.forEach(function (cell) {
                 if (Boolean(Math.round(Math.random()))) {
                     cell.alive = true;
-                    cell.domElement.className = 'cell alive';
                 }
             });
 
@@ -99,9 +89,11 @@
 
         var self = this;
 
-        this.cycle = function () {
+        this.cycle = () => {
 
-            // Gotta use that silly color fun, stolen from SO
+
+
+// Gotta use that silly color fun, stolen from SO
             // https://stackoverflow.com/questions/1484506/random-color-generator
             // Godspeed there Paolo Forgia, may your snippet be copy and pasted for
             // years and years to come.
@@ -116,6 +108,8 @@
 
             //Gotta get that rAF
             setTimeout(function () {
+
+                self.ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
 
                 //Spy on those pesky neighbors
                 self.flatCellMap.forEach(function (cell) {
@@ -137,25 +131,29 @@
                 //Update all dem cells
                 self.flatCellMap.forEach(function (cell) {
 
+                    var color;
+
                     if (cell.lifeBuffer === 'dead') {
                         cell.alive = false;
-                        cell.domElement.style.backgroundColor = 'white';
+                        color = '#FFFFFF';
                     }
 
                     if (cell.lifeBuffer === 'alive') {
                         cell.alive = true;
-                        cell.domElement.style.backgroundColor = getRandomColor();
+                        color = getRandomColor();
                     }
 
                     cell.lifeBuffer = null;
 
                     cell.updateStaleness();
 
+                    cell.draw(self.ctx, color, self.scale)
+
                 });
 
                 requestAnimationFrame(self.cycle);
 
-            }, 100);
+            }, 10);
 
         };
 
@@ -166,8 +164,8 @@
         this.x = x;
         this.y = y;
 
+
         this.staleness = 0;
-        this.domElement = null;
         this.previousAlive = false;
         this.alive = false;
 
@@ -181,7 +179,6 @@
                 this.staleness = (this.staleness === 100) ? 100 : this.staleness + 1;
             }
 
-            this.domElement.style.filter = 'grayscale(' + this.staleness + '%)';
 
         };
 
@@ -193,18 +190,19 @@
             return this.y;
         };
 
-        this.init = function (domElem) {
-            this.domElement = domElem;
-            this.domElement.style.backgroundColor = 'white';
-            this.domElement.style.height = '20px';
-            this.domElement.style.width = '20px';
-        };
+        this.draw = (ctx, color, scale) => {
+            if(this.alive) {
+                ctx.fillStyle = color;
+                console.log()
+                ctx.fillRect(this.x * scale, this.y * scale,  scale, scale);
+            }
+        }
 
     }
 
     window.onload = function () {
 
-        var game = new GameBoard(100, 100);
+        var game = new GameBoard(200, 200);
 
         game.init();
 
